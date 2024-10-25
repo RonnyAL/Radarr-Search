@@ -3,13 +3,13 @@ body:
     attributes:
       name: description
       description: >
-        Please provide your Sonarr API key and URL
+        Please provide your Radarr API key and URL
   - type: input
     attributes:
       name: url
-      label: 'Sonarr URL:'
-      defaultValue: "http://localhost:8989/"
-      description: 'Sonarr server URL'
+      label: 'Radarr URL:'
+      defaultValue: "http://localhost:7878/"
+      description: 'Radarr server URL'
   - type: input
     attributes:
       name: api_key
