@@ -1,12 +1,12 @@
 {
     "ID": "258159A0D7A64C7A931CBBD8FB3A6FA6",
-    "ActionKeyword": "sr",
-    "Name": "Sonarr Search",
-    "Description": "Search your Sonarr server library",
-    "Author": "Garulf",
+    "ActionKeyword": "rd",
+    "Name": "Radarr Search",
+    "Description": "Search your Radarr server library",
+    "Author": "RonnyAL",
     "Version": "0.1.0",
     "Language": "python",
-    "Website": "https://github.com/Garulf/sonarr-search",
+    "Website": "https://github.com/RonnyAL/radarr-search",
     "IcoPath": "./icon.png",
     "ExecuteFileName": "run.py"
 }
