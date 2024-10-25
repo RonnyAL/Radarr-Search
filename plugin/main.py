@@ -2,38 +2,34 @@ import webbrowser
 import urllib.parse
 
 from flox import Flox, utils, ICON_BROWSER, ICON_SETTINGS
-from pyarr import SonarrAPI
+from pyarr import RadarrAPI
 from requests.exceptions import ConnectionError
 
-CACHE_DIR = 'Sonarr-Search'
+CACHE_DIR = 'Radarr-Search'
 UNAUTHORIZED = {'error': 'Unauthorized'}
-DEFAULT_URL = 'http://localhost:8989'
+DEFAULT_URL = 'http://localhost:7878'
 
 
-@utils.cache('sonarr_series.json', max_age=300)
-def get_sonarr_series(sonarr):
-    shows = sonarr.get_series()
-    if shows == UNAUTHORIZED:
-        utils.remove_cache('sonarr_series.json')
+@utils.cache('radarr_movies.json', max_age=300)
+def get_radarr_movies(radarr):
+    movies = radarr.get_movies()
+    if movies == UNAUTHORIZED:
+        utils.remove_cache('radarr_movies.json')
         return []
-    return shows
+    return movies
 
-@utils.cache('sonarr_new_series.json', max_age=3)
-def get_sonarr_new_series(sonarr, query):
-    return sonarr.lookup_series(query)
-
-@utils.cache('sonarr_episodes.json', max_age=300)
-def get_episodes_by_id(sonarr, series_id):
-    return sonarr.get_episodes_by_series_id(series_id)
+@utils.cache('radarr_new_movies.json', max_age=3)
+def get_radarr_movies(radarr, query):
+    return radarr.lookup_movies(term=query)
 
 def format_subtitle(text):
     return text.replace('\r\n', ' ').replace('\n', ' ')
 
-class SonarrSearch(Flox):
+class RadarrSearch(Flox):
 
     def init_api(self):
         self.url, self.api_key = self.settings.get('url', DEFAULT_URL), self.settings.get('api_key')
-        self.sr = SonarrAPI(self.url, self.api_key)
+        self.rd = RadarrAPI(self.url, self.api_key)
 
     def query(self, query):
         self.init_api()
@@ -45,13 +41,13 @@ class SonarrSearch(Flox):
                 method=self.open_setting_dialog
             )
             return
-        self.series_results(query)
+        self.movies_results(query)
         if len(self._results) == 0:
-            self.new_series(query)
+            self.new_movies(query)
 
-    def series_results(self, query):
+    def movies_results(self, query):
         try:
-            shows = get_sonarr_series(self.sr)
+            movies = get_radarr_movies(self.rd)
         except ConnectionError:
             self.add_item(
                 title='Connection Error',
@@ -60,34 +56,34 @@ class SonarrSearch(Flox):
                 method=self.open_setting_dialog
             )
             return
-        if shows == []:
+        if movies == []:
             self.add_item(
-                title='Unauthorized or No shows found!',
+                title='Unauthorized or No movies found!',
                 subtitle='Please check your API key.',
                 icon=ICON_SETTINGS,
                 method=self.open_setting_dialog
             )
             return
-        for show in shows:
-            if query.lower() in show['title'].lower():
+        for movie in movies:
+            if query.lower() in movie['title'].lower():
                 self.add_item(
-                    title=show['title'],
-                    subtitle=format_subtitle(show['overview']),
+                    title=movie['title'],
+                    subtitle=format_subtitle(movie['overview']),
                     icon=self.icon,
-                    context=show,
-                    method=self.open_show,
-                    parameters=[self.url, show['titleSlug']],
+                    context=movie,
+                    method=self.open_movie,
+                    parameters=[self.url, movie['titleSlug']],
                 )
 
-    def new_series(self, query):
-        new_shows = self.sr.lookup_series(query)
-        for show in new_shows:
+    def new_movies(self, query):
+        new_shows = self.rd.lookup_movies(query)
+        for movie in new_shows:
             try:
-                overview = show['overview']
+                overview = movie['overview']
             except KeyError:
                 overview = '...'
             self.add_item(
-                title=show['title'],
+                title=movie['title'],
                 subtitle=format_subtitle(overview),
                 icon=self.icon,
                 method=self.add_new,
@@ -95,21 +91,21 @@ class SonarrSearch(Flox):
             )
 
     def context_menu(self, data):
-        show = data
+        movie = data
         url = self.settings['url']
         self.add_item(
             title='Open in browser',
             icon=ICON_BROWSER,
             method=self.open_show,
-            parameters=[url, show['titleSlug']],
+            parameters=[url, movie['titleSlug']],
         )
 
     def open_activity(self):
         url = self.settings['url']
         webbrowser.open(f"{url}/activity/queue")
 
-    def open_show(self, url, titleSlug):
-        webbrowser.open(f'{url}/series/{titleSlug}')
+    def open_movie(self, url, titleSlug):
+        webbrowser.open(f'{url}/movies/{titleSlug}')
 
     def add_new(self, url, search_term):
         search_term = urllib.parse.quote(search_term)
@@ -118,4 +114,4 @@ class SonarrSearch(Flox):
 
 
 if __name__ == "__main__":
-    SonarrSearch()
+    RadarrSearch()
